@@ -3,7 +3,7 @@
 > Interactive 3D Model Repository for Open-Source Firearm Designs
 
 [![License](https://img.shields.io/badge/license-ISC-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-2.0.0-green.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-2.1.0-green.svg)](package.json)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
 ## 🎯 Overview
@@ -20,6 +20,8 @@ RenderOSArms is a comprehensive platform for viewing, analyzing, and interacting
 - ✅ **Quality Assurance** - Automated validation and scoring
 
 ## 🚀 Quick Start
+
+**New to RenderOSArms?** Check out our **[Quick Start Guide](QUICK_START_GUIDE.md)** for a beginner-friendly walkthrough!
 
 ### Prerequisites
 
@@ -62,11 +64,24 @@ Open `docs/viewer.html` to access the interactive 3D model viewer with:
 - Multiple viewing angles
 - Part selection and inspection
 
+### Deployment
+
+Want to deploy your own instance? See **[Free Hosting Options](FREE_HOSTING_OPTIONS.md)** for complete guides to 7 free hosting platforms.
+
 ## 📖 Documentation
+
+**📚 Complete Documentation Hub:** See **[DOCUMENTATION_INDEX.md](DOCUMENTATION_INDEX.md)** for navigation across all 18 documents.
+
+### 🎯 Essential Docs
+
+- **[Quick Start Guide](QUICK_START_GUIDE.md)** - Beginner-friendly launch guide
+- **[Documentation Index](DOCUMENTATION_INDEX.md)** - Master navigation hub
+- **[Roadmap](ROADMAP.md)** - Strategic vision through 2027+
+- **[Free Hosting Options](FREE_HOSTING_OPTIONS.md)** - Deployment guides
 
 ### User Documentation
 
-- **[Getting Started Guide](CONTRIBUTING.md#getting-started)** - New user introduction
+- **[Quick Start Guide](QUICK_START_GUIDE.md)** - Step-by-step for beginners
 - **[3D Viewer Guide](docs/viewer.html)** - Using the interactive viewer
 - **[Search Guide](docs/index.html)** - Finding models effectively
 - **[Community Guide](COMMUNITY.md)** - Engagement and participation
@@ -77,6 +92,18 @@ Open `docs/viewer.html` to access the interactive 3D model viewer with:
 - **[API Documentation](API.md)** - RESTful API reference
 - **[Contributing](CONTRIBUTING.md)** - Contribution guidelines
 - **[Model Standards](MODEL_STANDARDS.md)** - Quality standards
+- **[Ecosystem](ECOSYSTEM.md)** - 30+ integration specifications
+
+### AI & Orchestration
+
+- **[AI Agents](AI_AGENTS.md)** - Agent personas and capabilities
+- **[Agentic Orchestration](AGENTIC_ORCHESTRATION.md)** - Multi-agent coordination framework
+
+### Governance & Planning
+
+- **[Roadmap](ROADMAP.md)** - Multi-year strategic plan (v2.2 → v5.0)
+- **[Governance](GOVERNANCE.md)** - Project governance and decision-making
+- **[Branch Merge Strategy](BRANCH_MERGE_STRATEGY.md)** - Development workflow
 
 ### Safety & Legal
 
@@ -214,23 +241,46 @@ Contributors earn badges for:
 
 ## 🗺️ Roadmap
 
-### Version 2.0 (Current)
+**📋 Full Roadmap:** See **[ROADMAP.md](ROADMAP.md)** for comprehensive multi-year strategic plan through 2027+
+
+### Version 2.1 (Current - Q4 2025)
 - ✅ 3D interactive viewer
-- ✅ AI agent system
+- ✅ AI agent system (pattern-matching)
 - ✅ Model validation
-- ✅ Comprehensive documentation
+- ✅ Comprehensive documentation (185 pages)
+- ✅ Server-side API foundation
+- ✅ GitHub Actions CI/CD
 
-### Version 2.1 (Planned)
-- [ ] Server-side API
-- [ ] User authentication
-- [ ] Model versioning
-- [ ] Advanced search filters
+### Version 2.2 (Q4 2025 - Testing Phase)
+- [ ] Jest/Mocha testing infrastructure
+- [ ] User authentication (OAuth)
+- [ ] PostgreSQL database integration
+- [ ] Enhanced API with rate limiting
+- [ ] Automated testing in CI/CD
 
-### Version 3.0 (Future)
-- [ ] Mobile applications
-- [ ] AR/VR integration
-- [ ] Collaborative editing
-- [ ] Print job management
+### Version 2.5 (Q1 2026 - Community Phase)
+- [ ] User profiles and favorites
+- [ ] Model ratings and reviews
+- [ ] Social features and sharing
+- [ ] Discussion forums
+
+### Version 3.0 (Q2 2026 - Expansion Phase)
+- [ ] Mobile applications (iOS/Android)
+- [ ] Desktop applications (Electron)
+- [ ] Plugin system and marketplace
+- [ ] Model remixing tools
+
+### Version 3.5 (Q3 2026 - Intelligence Phase)
+- [ ] Advanced AI (GPT-4/Claude integration)
+- [ ] Multi-agent orchestration
+- [ ] Intelligent recommendations
+- [ ] Automated model analysis
+
+### Version 4.0+ (2026-2027 - Ecosystem Phase)
+- [ ] 50+ partnerships and integrations
+- [ ] AR/VR viewer integration
+- [ ] Blockchain verification (optional)
+- [ ] Global community expansion
 
 ## 📝 License
 
