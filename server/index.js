@@ -9,6 +9,7 @@ const modelsRouter = require('./routes/models');
 const tagsRouter = require('./routes/tags');
 const categoriesRouter = require('./routes/categories');
 const viewerRouter = require('./routes/viewer');
+const aiRouter = require('./routes/ai');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -87,6 +88,7 @@ app.use('/api/models', modelsRouter);
 app.use('/api/tags', tagsRouter);
 app.use('/api/categories', categoriesRouter);
 app.use('/api/viewer', viewerRouter);
+app.use('/api/ai', aiRouter);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -110,6 +112,7 @@ app.get('/api', (req, res) => {
       tags: '/api/tags',
       categories: '/api/categories',
       viewer: '/api/viewer',
+      ai: '/api/ai',
       health: '/api/health',
     },
   });
@@ -172,6 +175,8 @@ API Endpoints:
   • GET  /api/tags
   • GET  /api/categories
   • GET  /api/viewer/load/:location
+  • POST /api/ai/query
+  • GET  /api/ai/capabilities
   • GET  /api/health
 
 Documentation: http://localhost:${PORT}/api

@@ -13,9 +13,19 @@ function displayResults(array) {
     return;
   }
 
-  const html = array.map(r => `<li><a target="_blank" href="${handleUrls(BASE_URL+r.location)}">${r.location}</a></li>`);
-
-  $('#results').html('<ul>'+html+'</ul>');
+  // Fixed: Prevent XSS by using jQuery DOM manipulation instead of string concatenation
+  const $ul = $('<ul>');
+  array.forEach(r => {
+    const $li = $('<li>');
+    const $a = $('<a>')
+      .attr('href', handleUrls(BASE_URL + r.location))
+      .attr('target', '_blank')
+      .attr('rel', 'noopener noreferrer')  // Security: prevent window.opener access
+      .text(r.location);  // Safe text insertion
+    $li.append($a);
+    $ul.append($li);
+  });
+  $('#results').empty().append($ul);
 }
 
 $(document).ready(function(){
@@ -37,8 +47,11 @@ $(document).ready(function(){
       return displayResults();
     }
 
-    const reg = new RegExp(search, 'gi');
-    const results = files.filter(f => f.tags.some(t => t.search(reg) > -1));
+    // Fixed: Prevent ReDoS by using safe string matching instead of user-controlled regex
+    const searchLower = search.toLowerCase();
+    const results = files.filter(f =>
+      f.tags.some(t => t.toLowerCase().includes(searchLower))
+    );
     displayResults(results);
   });
 

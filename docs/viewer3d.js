@@ -119,7 +119,7 @@ class ModelViewer3D {
   async loadSTL(url, partName = 'main') {
     return new Promise((resolve, reject) => {
       const loader = new THREE.STLLoader();
-      
+
       loader.load(
         url,
         (geometry) => {
@@ -137,15 +137,20 @@ class ModelViewer3D {
           mesh.receiveShadow = true;
           mesh.name = partName;
 
-          // Center geometry
+          // Calculate and store centroid BEFORE centering
           geometry.computeBoundingBox();
-          const center = new THREE.Vector3();
-          geometry.boundingBox.getCenter(center);
-          geometry.translate(-center.x, -center.y, -center.z);
+          const centroid = new THREE.Vector3();
+          geometry.boundingBox.getCenter(centroid);
 
-          // Store original position for animations
-          mesh.userData.originalPosition = mesh.position.clone();
+          // Fixed: Store centroid as original position (not the default (0,0,0))
+          mesh.userData.originalPosition = centroid.clone();
           mesh.userData.partName = partName;
+
+          // Center geometry at origin (this is for rotation purposes)
+          geometry.translate(-centroid.x, -centroid.y, -centroid.z);
+
+          // Position mesh at centroid in world space
+          mesh.position.copy(centroid);
 
           // Add to scene and parts list
           this.scene.add(mesh);
@@ -157,7 +162,10 @@ class ModelViewer3D {
           resolve(mesh);
         },
         (progress) => {
-          const percentComplete = (progress.loaded / progress.total) * 100;
+          // Fixed: Handle missing Content-Length header
+          const percentComplete = progress.total > 0
+            ? (progress.loaded / progress.total) * 100
+            : 0;
           this.onProgress(partName, percentComplete);
         },
         (error) => {
@@ -188,27 +196,42 @@ class ModelViewer3D {
    * Fit camera to see entire model
    */
   fitCameraToModel() {
+    // Fixed: Handle empty parts array
+    if (this.state.parts.length === 0) {
+      console.warn('No parts to fit camera to');
+      this.camera.position.set(0, 5, 10);
+      this.camera.lookAt(0, 0, 0);
+      if (this.controls) {
+        this.controls.target.set(0, 0, 0);
+        this.controls.update();
+      }
+      return;
+    }
+
     const box = new THREE.Box3();
-    
+
     this.state.parts.forEach(part => {
       box.expandByObject(part);
     });
 
-    const size = box.getSize(new THREE.Vector3());
-    const center = box.getCenter(new THREE.Vector3());
+    // Fixed: Validate bounding box
+    if (!box.isEmpty()) {
+      const size = box.getSize(new THREE.Vector3());
+      const center = box.getCenter(new THREE.Vector3());
 
-    const maxDim = Math.max(size.x, size.y, size.z);
-    const fov = this.camera.fov * (Math.PI / 180);
-    let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+      const maxDim = Math.max(size.x, size.y, size.z);
+      const fov = this.camera.fov * (Math.PI / 180);
+      let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
 
-    cameraZ *= 1.5; // Add some padding
+      cameraZ *= 1.5; // Add some padding
 
-    this.camera.position.set(center.x, center.y, center.z + cameraZ);
-    this.camera.lookAt(center);
+      this.camera.position.set(center.x, center.y, center.z + cameraZ);
+      this.camera.lookAt(center);
 
-    if (this.controls) {
-      this.controls.target.copy(center);
-      this.controls.update();
+      if (this.controls) {
+        this.controls.target.copy(center);
+        this.controls.update();
+      }
     }
   }
 
@@ -226,8 +249,8 @@ class ModelViewer3D {
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Easing function (ease-in-out)
-      const easeProgress = progress < 0.5
+      // Easing function (ease-in-out) - Fixed: Use <= for clarity and precision
+      const easeProgress = progress <= 0.5
         ? 2 * progress * progress
         : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
