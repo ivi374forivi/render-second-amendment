@@ -1,3 +1,30 @@
 documentation:
   - '**/*.md'
-  - 'docs/**'
+  - 'docs/**/*.html'
+
+3d-viewer:
+  - 'docs/viewer*.{js,html,css}'
+  - 'docs/viewer3d.js'
+  - 'docs/viewer-app.js'
+
+scripts:
+  - 'scripts/**'
+  - 'docs/list.js'
+
+validation:
+  - 'scripts/*validator*.js'
+  - 'scripts/validate*.js'
+
+models:
+  - 'Pistols_and_Subs/**'
+  - 'Rifles/**'
+  - 'Accessories/**'
+  - 'Home_Designed/**'
+  - 'Tools/**'
+
+dependencies:
+  - 'package*.json'
+  - 'package-lock.json'
+
+github-config:
+  - '.github/**'
