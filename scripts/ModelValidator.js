@@ -285,23 +285,41 @@ class ModelValidator {
 
   /**
    * Calculate overall score
+   * Fixed: Use percentage-based scoring for consistency across different models
    */
   calculateScore() {
-    // Scoring constants
-    const PASS_POINTS = 10;        // Points awarded for each passed check
-    const WARNING_PENALTY = 2;     // Points deducted for each warning
-    const ERROR_PENALTY = 10;      // Points deducted for each error
+    const totalChecks = this.results.passed.length +
+                        this.results.warnings.length +
+                        this.results.errors.length;
 
-    const passPoints = this.results.passed.length * PASS_POINTS;
-    const warningPenalty = this.results.warnings.length * WARNING_PENALTY;
-    const errorPenalty = this.results.errors.length * ERROR_PENALTY;
+    if (totalChecks === 0) {
+      this.results.score = 0;
+      return;
+    }
 
-    let score = passPoints - warningPenalty - errorPenalty;
-    
+    // Scoring weights
+    const PASS_WEIGHT = 1.0;        // Full credit
+    const WARNING_WEIGHT = 0.5;     // Half credit
+    const ERROR_WEIGHT = 0.0;       // No credit
+
+    const weightedScore = (
+      this.results.passed.length * PASS_WEIGHT +
+      this.results.warnings.length * WARNING_WEIGHT +
+      this.results.errors.length * ERROR_WEIGHT
+    );
+
+    // Calculate percentage
+    const percentage = (weightedScore / totalChecks) * 100;
+
+    // Apply penalty for errors (beyond just not getting points)
+    const errorPenalty = this.results.errors.length * 5; // 5 points per error
+
+    let finalScore = percentage - errorPenalty;
+
     // Normalize to 0-100
-    score = Math.max(0, Math.min(100, score));
-    
-    this.results.score = Math.round(score);
+    finalScore = Math.max(0, Math.min(100, finalScore));
+
+    this.results.score = Math.round(finalScore);
   }
 
   /**

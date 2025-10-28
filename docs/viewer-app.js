@@ -50,24 +50,34 @@
       }
     });
 
-    // Assembly controls
+    // Assembly controls - Fixed: Prevent race conditions during animation
     $('#assemblySlider').on('input', function() {
-      const progress = parseFloat($(this).val()) / 100;
-      if (viewer) {
+      if (viewer && !viewer.state.isAnimating) {
+        const progress = parseFloat($(this).val()) / 100;
         viewer.state.assemblyProgress = progress;
         viewer.updatePartPositions();
       }
     });
 
     $('#assembleBtn').on('click', function() {
-      if (viewer) {
+      if (viewer && !viewer.state.isAnimating) {
+        // Disable controls during animation
+        $('#assemblySlider').prop('disabled', true);
+        $('#assembleBtn').prop('disabled', true);
+        $('#disassembleBtn').prop('disabled', true);
+
         viewer.animateAssembly(1.0);
         $('#assemblySlider').val(100);
       }
     });
 
     $('#disassembleBtn').on('click', function() {
-      if (viewer) {
+      if (viewer && !viewer.state.isAnimating) {
+        // Disable controls during animation
+        $('#assemblySlider').prop('disabled', true);
+        $('#assembleBtn').prop('disabled', true);
+        $('#disassembleBtn').prop('disabled', true);
+
         viewer.animateAssembly(0.0);
         $('#assemblySlider').val(0);
       }
@@ -111,15 +121,34 @@
       }
     });
 
-    // Material controls
+    // Material controls - Fixed: Add color validation
     $('#materialColor').on('change', function() {
       const color = $(this).val();
+
+      // Fixed: Validate hex color format
+      const hexColorRegex = /^#[0-9A-F]{6}$/i;
+      if (!hexColorRegex.test(color)) {
+        console.error('Invalid hex color:', color);
+        return;
+      }
+
       if (viewer && viewer.state.parts.length > 0) {
-        viewer.state.parts.forEach(part => {
-          viewer.setMaterial(part.userData.partName, {
-            color: parseInt(color.replace('#', '0x'))
+        try {
+          const colorValue = parseInt(color.replace('#', '0x'), 16);
+
+          if (isNaN(colorValue)) {
+            console.error('Failed to parse color:', color);
+            return;
+          }
+
+          viewer.state.parts.forEach(part => {
+            viewer.setMaterial(part.userData.partName, {
+              color: colorValue
+            });
           });
-        });
+        } catch (err) {
+          console.error('Error setting material color:', err);
+        }
       }
     });
 
@@ -189,15 +218,37 @@
     if (!model) return;
 
     showLoading();
-    
+
     try {
-      // Clear existing model
+      // Fixed: Comprehensive cleanup to prevent memory leaks
       if (viewer.state.parts.length > 0) {
+        // Clear selection first
+        if (viewer.state.selectedPart) {
+          viewer.state.selectedPart.material.emissive.setHex(0x000000);
+          viewer.state.selectedPart = null;
+        }
+
+        // Dispose all parts
         viewer.state.parts.forEach(part => {
           viewer.scene.remove(part);
-          part.geometry.dispose();
-          part.material.dispose();
+
+          // Dispose geometry
+          if (part.geometry) {
+            part.geometry.dispose();
+          }
+
+          // Dispose material and textures
+          if (part.material) {
+            // Dispose textures if any
+            if (part.material.map) part.material.map.dispose();
+            if (part.material.normalMap) part.material.normalMap.dispose();
+            if (part.material.roughnessMap) part.material.roughnessMap.dispose();
+            if (part.material.metalnessMap) part.material.metalnessMap.dispose();
+
+            part.material.dispose();
+          }
         });
+
         viewer.state.parts = [];
       }
 
@@ -260,9 +311,35 @@
 
   /**
    * Set camera view
+   * Fixed: Add null check for controls and fallback behavior
    */
   function setView(view) {
-    if (!viewer || !viewer.controls) return;
+    if (!viewer) return;
+
+    // Fixed: Add null check for controls with fallback
+    if (!viewer.controls) {
+      console.warn('Orbit controls not available');
+      // Fallback to direct camera positioning
+      const distance = 10;
+      let position;
+      switch (view) {
+        case 'front':
+          position = new THREE.Vector3(0, 0, distance);
+          break;
+        case 'side':
+          position = new THREE.Vector3(distance, 0, 0);
+          break;
+        case 'top':
+          position = new THREE.Vector3(0, distance, 0);
+          break;
+        case 'iso':
+        default:
+          position = new THREE.Vector3(distance * 0.7, distance * 0.7, distance * 0.7);
+      }
+      viewer.camera.position.copy(position);
+      viewer.camera.lookAt(0, 0, 0);
+      return;
+    }
 
     const target = viewer.controls.target.clone();
     const distance = 10;
@@ -296,8 +373,8 @@
       const elapsed = Date.now() - startTime;
       const progress = Math.min(elapsed / duration, 1);
 
-      // Ease-in-out
-      const easeProgress = progress < 0.5
+      // Ease-in-out - Fixed: Use <= for clarity and precision
+      const easeProgress = progress <= 0.5
         ? 2 * progress * progress
         : 1 - Math.pow(-2 * progress + 2, 2) / 2;
 
@@ -307,7 +384,9 @@
       if (progress < 1) {
         requestAnimationFrame(animateCamera);
       } else {
-        viewer.controls.update();
+        if (viewer.controls) {
+          viewer.controls.update();
+        }
       }
     }
 
@@ -385,6 +464,11 @@
   function handleAnimationComplete() {
     const progress = viewer.state.assemblyProgress;
     $('#assemblySlider').val(progress * 100);
+
+    // Fixed: Re-enable controls after animation
+    $('#assemblySlider').prop('disabled', false);
+    $('#assembleBtn').prop('disabled', false);
+    $('#disassembleBtn').prop('disabled', false);
   }
 
   // Initialize when DOM is ready
