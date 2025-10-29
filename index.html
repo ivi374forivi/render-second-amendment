@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Project Index</title>
+  <style>
+    body{font:16px/1.5 system-ui,Arial;margin:0;padding:2rem;max-width:1000px}
+    header{margin-bottom:1.5rem}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}
+    a.card{display:block;padding:14px;border:1px solid #ddd;border-radius:10px;text-decoration:none}
+    a.card:hover{background:#f7f7f7}
+    footer{margin-top:2rem;color:#666}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Project Index</h1>
+    <p>Browse folders, guides, and tools.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="Guides/">Guides</a>
+    <a class="card" href="Tools/">Tools</a>
+    <a class="card" href="Rifles/">Rifles</a>
+    <a class="card" href="Pistols_and_Subs/">Pistols & Subs</a>
+    <a class="card" href="Ammo/12_Gauge_to_.22_CB_sub-caliber_Inserts/">Ammo Inserts</a>
+    <a class="card" href="Home_Designed/">Home Designed</a>
+    <!-- Add/remove cards as you like -->
+  </div>
+
+  <footer>© <span id="y"></span> YourName</footer>
+  <script>document.getElementById('y').textContent=new Date().getFullYear()</script>
+</body>
+</html>
