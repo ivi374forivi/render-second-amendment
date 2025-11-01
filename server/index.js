@@ -5,29 +5,39 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
+// Import route modules
 const modelsRouter = require('./routes/models');
 const tagsRouter = require('./routes/tags');
 const categoriesRouter = require('./routes/categories');
 const viewerRouter = require('./routes/viewer');
 const aiRouter = require('./routes/ai');
 
+// Import enhanced middleware
+const { errorHandler, notFoundHandler } = require('./middleware/errorHandler');
+const { requestLogger, errorLogger, performanceMonitor, analyticsMiddleware, getAnalytics } = require('./middleware/logger');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// Request logging (before other middleware)
+app.use(requestLogger);
+app.use(performanceMonitor);
+app.use(analyticsMiddleware);
 
 // Security middleware
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
-      defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "cdn.jsdelivr.net", "code.jquery.com"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "blob:"],
-      connectSrc: ["'self'"],
-      fontSrc: ["'self'"],
-      objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
-      frameSrc: ["'none'"],
+      defaultSrc: ['\'self\''],
+      scriptSrc: ['\'self\'', '\'unsafe-inline\'', 'cdn.jsdelivr.net', 'code.jquery.com'],
+      styleSrc: ['\'self\'', '\'unsafe-inline\''],
+      imgSrc: ['\'self\'', 'data:', 'blob:'],
+      connectSrc: ['\'self\''],
+      fontSrc: ['\'self\''],
+      objectSrc: ['\'none\''],
+      mediaSrc: ['\'self\''],
+      frameSrc: ['\'none\''],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -90,13 +100,28 @@ app.use('/api/categories', categoriesRouter);
 app.use('/api/viewer', viewerRouter);
 app.use('/api/ai', aiRouter);
 
-// Health check endpoint
+// Health check endpoint (enhanced)
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    version: '2.0.0',
+    version: '2.1.0',
     environment: NODE_ENV,
+    uptime: process.uptime(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+      unit: 'MB'
+    }
+  });
+});
+
+// Analytics endpoint
+app.get('/api/analytics', (req, res) => {
+  const analytics = getAnalytics();
+  res.json({
+    ...analytics,
+    timestamp: new Date().toISOString()
   });
 });
 
@@ -105,7 +130,7 @@ app.get('/api', (req, res) => {
   res.json({
     message: 'RenderOSArms API v1',
     documentation: '/api/docs',
-    version: '2.0.0',
+    version: '2.1.0',
     endpoints: {
       models: '/api/models',
       search: '/api/models/search',
@@ -114,7 +139,17 @@ app.get('/api', (req, res) => {
       viewer: '/api/viewer',
       ai: '/api/ai',
       health: '/api/health',
+      analytics: '/api/analytics',
+      aiCapabilities: '/api/ai/capabilities',
+      aiHealth: '/api/ai/health'
     },
+    enhancements: {
+      logging: true,
+      validation: true,
+      errorHandling: true,
+      analytics: true,
+      aiEnhanced: true
+    }
   });
 });
 
@@ -123,50 +158,34 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../docs/index.html'));
 });
 
-// 404 handler for API routes
-app.use('/api/*', (req, res) => {
-  res.status(404).json({
-    error: {
-      code: 'NOT_FOUND',
-      message: 'The requested endpoint does not exist',
-      details: {
-        path: req.path,
-        method: req.method,
-      },
-    },
-  });
-});
+// 404 handler for API routes (use our custom handler)
+app.use('/api/*', notFoundHandler);
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
+// Error logging middleware
+app.use(errorLogger);
 
-  const statusCode = err.statusCode || 500;
-  const errorResponse = {
-    error: {
-      code: err.code || 'INTERNAL_SERVER_ERROR',
-      message: err.message || 'An unexpected error occurred',
-    },
-  };
-
-  if (NODE_ENV === 'development') {
-    errorResponse.error.stack = err.stack;
-  }
-
-  res.status(statusCode).json(errorResponse);
-});
+// Global error handler (use our enhanced handler)
+app.use(errorHandler);
 
 // Start server
 if (require.main === module) {
   app.listen(PORT, () => {
     console.log(`
 ┌─────────────────────────────────────────┐
-│  RenderOSArms Server                    │
-│  Version: 2.0.0                         │
+│  RenderOSArms Server (Enhanced)         │
+│  Version: 2.1.0                         │
 │  Environment: ${NODE_ENV.padEnd(25)}│
 │  Port: ${PORT.toString().padEnd(31)}│
 │  URL: http://localhost:${PORT.toString().padEnd(19)}│
 └─────────────────────────────────────────┘
+
+🚀 Enhancements Active:
+  ✅ Enhanced AI Agents (5 types)
+  ✅ Request Validation
+  ✅ Error Handling
+  ✅ Performance Monitoring
+  ✅ Analytics Tracking
+  ✅ Security Logging
 
 API Endpoints:
   • GET  /api/models
@@ -177,7 +196,9 @@ API Endpoints:
   • GET  /api/viewer/load/:location
   • POST /api/ai/query
   • GET  /api/ai/capabilities
+  • GET  /api/ai/health
   • GET  /api/health
+  • GET  /api/analytics
 
 Documentation: http://localhost:${PORT}/api
 Web Interface: http://localhost:${PORT}/

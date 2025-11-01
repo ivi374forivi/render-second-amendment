@@ -11,7 +11,8 @@
     "pc-msg": "echo 'Updating list...' && exit 0",
     "dev": "node server/index.js",
     "start": "NODE_ENV=production node server/index.js",
-    "test": "echo 'Tests to be implemented' && exit 0",
+    "test": "node scripts/test-ai-enhancements.js",
+    "test:ai": "node scripts/test-ai-enhancements.js",
     "lint": "eslint docs/**/*.js server/**/*.js",
     "validate": "node scripts/validate-models.js"
   },

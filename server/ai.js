@@ -79,6 +79,22 @@ class AIAgent {
       educational: 0
     };
     
+    // Priority patterns that should strongly influence detection
+    const priorityPatterns = {
+      educational: ['what is ', 'what does', 'define ', 'definition of'],
+      community_liaison: ['contribute', 'how can i help', 'how do i contribute', 'report bug', 'submit'],
+      safety_compliance: ['is this legal', 'can i build', 'allowed to', 'regulations', 'laws in']
+    };
+    
+    // Check priority patterns first (give higher weight)
+    for (const [intent, patterns] of Object.entries(priorityPatterns)) {
+      for (const pattern of patterns) {
+        if (lowerQuery.includes(pattern)) {
+          scores[intent] += 3; // Higher weight for priority patterns
+        }
+      }
+    }
+    
     // Calculate confidence scores for each intent
     this.safetyIntents.forEach(intent => {
       if (lowerQuery.includes(intent)) scores.safety_compliance += 1;
