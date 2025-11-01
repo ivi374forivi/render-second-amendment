@@ -200,6 +200,12 @@ function securityLogger(event, details = {}) {
 
 /**
  * API usage analytics
+ * 
+ * Note: Uses in-memory Map for request tracking. In a multi-threaded or
+ * multi-server environment, consider using atomic operations or a shared
+ * data store (e.g., Redis) for accurate analytics across instances.
+ * For single-threaded Node.js applications, this implementation is safe
+ * due to the event loop's single-threaded nature.
  */
 const apiStats = {
   requests: new Map(),

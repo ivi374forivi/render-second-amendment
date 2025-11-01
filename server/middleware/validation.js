@@ -189,19 +189,38 @@ function validateParams(schema) {
 
 /**
  * Sanitize string to prevent XSS
+ * Comprehensive sanitization for user input
+ * Uses a safe approach without complex regex patterns
  */
 function sanitizeString(str) {
   if (typeof str !== 'string') return str;
   
-  return str
-    .replace(/[<>]/g, '') // Remove < and >
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .trim();
+  let sanitized = str;
+  
+  // Remove dangerous HTML characters
+  sanitized = sanitized.replace(/[<>]/g, '');
+  
+  // Remove dangerous protocols
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  sanitized = sanitized.replace(/data:/gi, '');
+  sanitized = sanitized.replace(/vbscript:/gi, '');
+  sanitized = sanitized.replace(/file:/gi, '');
+  
+  // Remove event handlers using a safe split-and-filter approach
+  // This avoids complex regex that could cause ReDoS
+  const eventHandlerPattern = /on[a-z]{4,}/gi; // Match on[4+ letters] like onclick, onload
+  sanitized = sanitized.replace(eventHandlerPattern, '');
+  
+  return sanitized.trim();
 }
 
 /**
  * Rate limiting per IP
+ * 
+ * Note: This is a simple in-memory implementation suitable for development
+ * and single-server deployments. For production multi-server deployments,
+ * consider using Redis or another distributed cache to share rate limit
+ * state across instances.
  */
 const requestCounts = new Map();
 

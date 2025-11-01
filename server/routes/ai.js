@@ -3,7 +3,6 @@ const router = express.Router();
 const aiAgent = require('../ai');
 const { validateBody } = require('../middleware/validation');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { createError } = require('../middleware/errorHandler');
 
 // Validation schema for AI query
 const querySchema = {
@@ -25,10 +24,6 @@ const querySchema = {
 // POST /api/ai/query - Query the AI agent
 router.post('/query', validateBody(querySchema), asyncHandler(async (req, res) => {
   const { query, sessionId } = req.body;
-
-  if (!query || query.trim().length === 0) {
-    throw createError.validation('Query cannot be empty');
-  }
 
   // Process query with optional session context
   const response = aiAgent.processQuery(query, sessionId);

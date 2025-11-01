@@ -323,20 +323,21 @@ class ModelValidator {
 
     const content = fs.readFileSync(readmePath, 'utf-8');
     
-    // Check for alt text on images
+    // Check for alt text on images - use matchAll for better performance
     const imageRegex = /!\[([^\]]*)\]\([^)]+\)/g;
-    let match;
+    const matches = [...content.matchAll(imageRegex)];
     let hasEmptyAlt = false;
     
-    while ((match = imageRegex.exec(content)) !== null) {
+    for (const match of matches) {
       if (!match[1] || match[1].trim() === '') {
         hasEmptyAlt = true;
+        break;
       }
     }
     
     if (hasEmptyAlt) {
       this.addWarning('Accessibility: Some images missing alt text');
-    } else if (imageRegex.test(content)) {
+    } else if (matches.length > 0) {
       this.addPass('All images have alt text');
     }
     
