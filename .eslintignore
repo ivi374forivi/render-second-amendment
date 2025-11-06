@@ -1,0 +1,5 @@
+# ESLint ignore patterns
+docs/files.js
+node_modules/
+logs/
+*.log

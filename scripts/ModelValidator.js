@@ -55,6 +55,11 @@ class ModelValidator {
       await this.check3DFiles(modelPath);
       await this.checkRenderImages(modelPath);
       await this.checkDocumentation(modelPath);
+      
+      // Enhanced validation checks
+      await this.checkSecurityIssues(modelPath);
+      await this.checkAccessibility(modelPath);
+      await this.checkPerformance(modelPath);
 
       // Calculate overall score
       this.calculateScore();
@@ -263,6 +268,158 @@ class ModelValidator {
     if (/!\[.*\]\(.*\)/.test(content)) {
       this.addPass('Includes embedded images in README');
     }
+    
+    // Check for tables (structured data)
+    if (/\|.*\|/.test(content)) {
+      this.addPass('Includes tables for structured information');
+    }
+    
+    // Check for code blocks (print settings, etc.)
+    if (/```/.test(content)) {
+      this.addPass('Includes code blocks for technical details');
+    }
+  }
+
+  /**
+   * Check for security issues in documentation
+   */
+  async checkSecurityIssues(modelPath) {
+    const readmePath = path.join(modelPath, 'README.md');
+    
+    if (!fs.existsSync(readmePath)) {
+      return;
+    }
+
+    const content = fs.readFileSync(readmePath, 'utf-8');
+    
+    // Check for potentially dangerous content
+    const dangerousPatterns = [
+      { pattern: /<script/i, message: 'Contains potential XSS script tags' },
+      { pattern: /javascript:/i, message: 'Contains javascript: protocol' },
+      { pattern: /on\w+\s*=/i, message: 'Contains inline event handlers' }
+    ];
+    
+    dangerousPatterns.forEach(({ pattern, message }) => {
+      if (pattern.test(content)) {
+        this.addWarning(`Security: ${message}`);
+      }
+    });
+    
+    // Check for absolute file paths that might expose system info
+    if (/[A-Z]:\\|\/home\/|\/Users\//i.test(content)) {
+      this.addWarning('Contains absolute file paths - consider using relative paths');
+    }
+  }
+
+  /**
+   * Check for accessibility issues
+   */
+  async checkAccessibility(modelPath) {
+    const readmePath = path.join(modelPath, 'README.md');
+    
+    if (!fs.existsSync(readmePath)) {
+      return;
+    }
+
+    const content = fs.readFileSync(readmePath, 'utf-8');
+    
+    // Check for alt text on images - use matchAll for better performance
+    const imageRegex = /!\[([^\]]*)\]\([^)]+\)/g;
+    const matches = [...content.matchAll(imageRegex)];
+    let hasEmptyAlt = false;
+    
+    for (const match of matches) {
+      if (!match[1] || match[1].trim() === '') {
+        hasEmptyAlt = true;
+        break;
+      }
+    }
+    
+    if (hasEmptyAlt) {
+      this.addWarning('Accessibility: Some images missing alt text');
+    } else if (matches.length > 0) {
+      this.addPass('All images have alt text');
+    }
+    
+    // Check for proper heading hierarchy
+    const headings = content.match(/^#{1,6}\s+.+$/gm);
+    if (headings && headings.length > 0) {
+      this.addPass('Document uses heading structure');
+    } else {
+      this.addWarning('Accessibility: No clear heading structure');
+    }
+  }
+
+  /**
+   * Check performance considerations
+   */
+  async checkPerformance(modelPath) {
+    const files = this.getAllFiles(modelPath);
+    
+    // Check for very large files
+    const largeFiles = files.filter(file => {
+      const stats = fs.statSync(file);
+      return stats.size > 50 * 1024 * 1024; // 50MB
+    });
+    
+    if (largeFiles.length > 0) {
+      largeFiles.forEach(file => {
+        this.addWarning(`Performance: Very large file ${path.basename(file)} may cause loading issues`);
+      });
+    }
+    
+    // Check total model size
+    const totalSize = files.reduce((acc, file) => {
+      return acc + fs.statSync(file).size;
+    }, 0);
+    
+    if (totalSize > 500 * 1024 * 1024) { // 500MB
+      this.addWarning(`Performance: Total model size ${this.formatBytes(totalSize)} is very large`);
+    } else {
+      this.addPass(`Model size ${this.formatBytes(totalSize)} is reasonable`);
+    }
+  }
+
+  /**
+   * Suggest automated fixes
+   */
+  suggestFixes() {
+    const suggestions = [];
+    
+    this.results.errors.forEach(error => {
+      if (error.includes('Missing required file: README.md')) {
+        suggestions.push({
+          issue: error,
+          fix: 'Create a README.md file with model description, specifications, and assembly instructions',
+          automated: false
+        });
+      }
+    });
+    
+    this.results.warnings.forEach(warning => {
+      if (warning.includes('README is too short')) {
+        suggestions.push({
+          issue: warning,
+          fix: 'Expand README with detailed sections: Description, Parts List, Assembly, Print Settings, Safety',
+          automated: false
+        });
+      } else if (warning.includes('missing alt text')) {
+        suggestions.push({
+          issue: warning,
+          fix: 'Add descriptive alt text to all images for accessibility',
+          automated: false
+        });
+      } else if (warning.includes('absolute file paths')) {
+        suggestions.push({
+          issue: warning,
+          fix: 'Replace absolute paths with relative paths',
+          automated: true,
+          script: 'Replace system-specific paths with repository-relative paths'
+        });
+      }
+    });
+    
+    return suggestions;
   }
 
   /**
@@ -353,7 +510,8 @@ class ModelValidator {
         passed: this.results.passed.length,
         warnings: this.results.warnings.length,
         errors: this.results.errors.length
-      }
+      },
+      suggestions: this.suggestFixes()
     };
   }
 
